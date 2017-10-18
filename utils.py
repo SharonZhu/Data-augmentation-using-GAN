@@ -18,8 +18,17 @@ import sys
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-
+import cv2
 import data
+
+def display_image(image, gray=False):
+    dis_image = image.astype(np.uint8)
+    plt.figure()
+
+    if gray:
+        plt.imshow(dis_image, cmap='gray')
+    else:
+        plt.imshow(dis_image)
 
 def load_caltech101(data_path, image_size):
     images = []
@@ -28,27 +37,32 @@ def load_caltech101(data_path, image_size):
 
     for fl in files:
         file = data_path + fl
-        image = misc.imread(file)
+        image = misc.imread(file, mode='L')
         image = misc.imresize(image, [image_size, image_size])
+
+        '''test image'''
+        # print(image.shape)
+        # display_image(image, True)
+        # plt.show()
+        # sys.exit()
+
         image = np.reshape(image, [image_size, image_size, -1])
-        if image.shape[2] == 1:
-            # image = np.concatenate((image, np.empty(shape=[image_size, image_size, 2])), axis = 2)
-            continue
+        # print(image.shape)
         images.append(image)
 
-        label = 1.0
-        labels.append(label)
+        # label = 1.0
+        # labels.append(label)
 
     images_uint = np.array(images, dtype=np.uint8)
 
     images = np.array(images, dtype=np.float32)
-    labels = np.array(labels, dtype=np.int64)
+    # labels = np.array(labels, dtype=np.int64)
 
     print('Loding training data completed')
     print('images_shape:', images.shape)
-    print('labels_shape:', labels.shape)
+    # print('labels_shape:', labels.shape)
 
-    return images_uint, images/255, labels
+    return images_uint, images/255
 
 def data_augmentation(ratio, images):
     '''

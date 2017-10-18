@@ -16,13 +16,14 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 import tensorflow as tf
 
-EPOCH = 2400 # 2399
+# EPOCH = 2400 # 2399
+EPOCH = 1500
 BATCH_SIZE = 64
 Z_DIM = 100
-DATASET = 'Caltech101'
-CHECKPOINT_DIR = 'wgan_faces/checkpoint/'
-RESULT_DIR = '/Users/zhuxinyue/ML/Gen_Caltech101/faces/'
-LOG_DIR = 'wgan_faces/log/'
+DATASET = 'face_emotion'
+CHECKPOINT_DIR = 'wgan_emotion/checkpoint/'
+RESULT_DIR = '/Users/zhuxinyue/ML/Gen_Caltech101/face_emotion/'
+LOG_DIR = 'wgan_emotion/log/'
 
 """main"""
 def main():
@@ -30,8 +31,8 @@ def main():
     # open session
     with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
         # declare instance for GAN
-
-        gan = WGAN(classes='Faces', sess=sess,  epoch=EPOCH, batch_size=BATCH_SIZE,
+        classes = ['angry']
+        gan = WGAN(classes=classes, sess=sess,  epoch=EPOCH, batch_size=BATCH_SIZE,
                    z_dim=Z_DIM, dataset_name=DATASET, augmentation=False, aug_ratio=12,
                    checkpoint_dir=CHECKPOINT_DIR, result_dir=RESULT_DIR, log_dir=LOG_DIR)
 

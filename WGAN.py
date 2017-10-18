@@ -7,6 +7,7 @@ import numpy as np
 
 from ops import *
 from utils import *
+from emotion.emotion_data import read_train_sets
 
 class WGAN(object):
     def __init__(self, classes, sess, epoch, batch_size, z_dim, dataset_name, augmentation, aug_ratio, checkpoint_dir, result_dir, log_dir):
@@ -103,7 +104,40 @@ class WGAN(object):
                     self.beta1 = 0.5
 
                 else:
-                    raise NotImplementedError
+                    if dataset_name == 'face_emotion':
+                        dataset_dir = '/Users/zhuxinyue/ML/' + dataset_name + '/'
+                        # parameters
+                        self.input_height = 48
+                        self.input_width = 48
+                        self.output_height = 48
+                        self.output_width = 48
+
+                        self.z_dim = z_dim  # dimension of noise-vector
+                        self.c_dim = 1  # dimension of channels?
+
+                        # WGAN parameter
+                        self.disc_iters = 5  # The number of critic iterations for one-step of generator
+
+                        # train
+                        self.learning_rate = 0.0002
+                        self.beta1 = 0.5
+
+                        # test
+                        self.sample_num = 64  # number of generated images to be saved
+
+                        # load face_emotion
+                        self.data_X, self.data_y, _, _, _, _ = read_train_sets(dataset_dir, self.classes, 0, 6000)
+
+                        # Augmentation
+                        if augmentation == True:
+                            self.dataX_aug = data_augmentation(ratio=self.aug_ratio, images=self.dataX_uint8)
+                            self.data_X = np.concatenate((self.data_X, self.dataX_aug), axis=0)
+
+                        # get number of batches for a single epoch
+                        self.num_batches = len(self.data_X) // self.batch_size
+
+                    else:
+                        raise NotImplementedError
 
     def discriminator(self, x, is_training=True, reuse=False):
         # Network Architecture is exactly same as in infoGAN (https://arxiv.org/abs/1606.03657)
@@ -128,9 +162,9 @@ class WGAN(object):
         # Network Architecture is exactly same as in infoGAN (https://arxiv.org/abs/1606.03657)
         # Architecture : FC1024_BR-FC7x7x128_BR-(64)4dc2s_BR-(1)4dc2s_S
         with tf.variable_scope("generator", reuse=reuse):
-            net = tf.nn.relu(bn(fc(z, 4*4*512, scope='g_fc1'), is_training=is_training, scope='g_bn1'))
+            net = tf.nn.relu(bn(fc(z, 3*3*512, scope='g_fc1'), is_training=is_training, scope='g_bn1'))
             # net = tf.nn.relu(bn(linear(net, 128 * 8 * 8, scope='g_fc2'), is_training=is_training, scope='g_bn2'))
-            net = tf.reshape(net, [self.batch_size, 4, 4, 512])
+            net = tf.reshape(net, [self.batch_size, 3, 3, 512])
 
             # deconv
             # net = tf.nn.relu(
@@ -146,20 +180,20 @@ class WGAN(object):
 
             # resize_conv
             net = tf.nn.relu(
-                bn(resize_conv(net, 8, 8, 256, name='g_rc1'), is_training=is_training,
+                bn(resize_conv(net, 6, 6, 256, name='g_rc1'), is_training=is_training,
                    scope='g_bn3'))
             net = tf.nn.relu(
-                bn(resize_conv(net, 16, 16, 128, name='g_rc2'), is_training=is_training,
+                bn(resize_conv(net, 12, 12, 128, name='g_rc2'), is_training=is_training,
                    scope='g_bn4'))
             net = tf.nn.relu(
-                bn(resize_conv(net, 32, 32, 64, name='g_rc3'), is_training=is_training,
+                bn(resize_conv(net, 24, 24, 64, name='g_rc3'), is_training=is_training,
                    scope='g_bn5'))
             # net = tf.nn.relu(
             #     bn(resize_conv(net, 64, 64, 32, name='g_rc4'), is_training=is_training,
             #        scope='g_bn6'))
 
             # out = tf.nn.sigmoid(deconv2d(net, [self.batch_size, 128, 128, 3], 4, 4, 2, 2, name='g_dc6'))
-            out = tf.tanh(resize_conv(net, 64, 64, 3, name='g_rc5'))
+            out = tf.tanh(resize_conv(net, 48, 48, 1, name='g_rc5'))
             print('generator out', out.shape)
 
             return out
@@ -281,6 +315,7 @@ class WGAN(object):
             start_epoch = (int)(checkpoint_counter / self.num_batches)
             start_batch_id = checkpoint_counter - start_epoch * self.num_batches
             counter = checkpoint_counter
+            print(counter)
             print(" [*] Load SUCCESS")
         else:
             start_epoch = 0
@@ -306,7 +341,7 @@ class WGAN(object):
                 self.writer.add_summary(summary_str, counter)
 
                 # update G network
-                if (counter) % self.disc_iters == 0 or counter==1999:
+                if (counter) % self.disc_iters == 0:
                     _, summary_str, g_loss = self.sess.run([self.g_optim, self.summary_op, self.g_loss],
                                                            feed_dict={self.inputs: batch_images, self.z: batch_z})
                     self.writer.add_summary(summary_str, counter)
