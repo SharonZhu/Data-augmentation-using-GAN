@@ -1,8 +1,11 @@
+import sys
+import os
 import tensorflow as tf
-import utils
+# import CycleGAN.utils as utils
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 class Reader():
-  def __init__(self, tfrecords_file, image_size=256,
+  def __init__(self, tfrecords_file, image_size=48,
     min_queue_examples=1000, batch_size=1, num_threads=8, name=''):
     """
     Args:
@@ -26,37 +29,31 @@ class Reader():
     """
     with tf.name_scope(self.name):
       filename_queue = tf.train.string_input_producer([self.tfrecords_file])
-      reader = tf.TFRecordReader()
+      # reader = tf.TFRecordReader()
 
       _, serialized_example = self.reader.read(filename_queue)
       features = tf.parse_single_example(
           serialized_example,
           features={
-            'image/file_name': tf.FixedLenFeature([], tf.string),
-            'image/encoded_image': tf.FixedLenFeature([], tf.string),
+            'img_raw': tf.FixedLenFeature([], tf.string)
           })
 
-      image_buffer = features['image/encoded_image']
-      image = tf.image.decode_jpeg(image_buffer, channels=3)
-      image = self._preprocess(image)
+      image = tf.decode_raw(features['img_raw'], tf.float32)
+      image = tf.reshape(image, [self.image_size, self.image_size, 1])
+      print(image.shape)
+
       images = tf.train.shuffle_batch(
             [image], batch_size=self.batch_size, num_threads=self.num_threads,
             capacity=self.min_queue_examples + 3*self.batch_size,
             min_after_dequeue=self.min_queue_examples
           )
 
-      tf.summary.image('_input', images)
+      tf.summary.image('input', images)
     return images
 
-  def _preprocess(self, image):
-    image = tf.image.resize_images(image, size=(self.image_size, self.image_size))
-    image = utils.convert2float(image)
-    image.set_shape([self.image_size, self.image_size, 3])
-    return image
-
 def test_reader():
-  TRAIN_FILE_1 = 'data/tfrecords/apple.tfrecords'
-  TRAIN_FILE_2 = 'data/tfrecords/orange.tfrecords'
+  TRAIN_FILE_1 = '/Users/zhuxinyue/ML/tfrecords/emotion.tfrecords'
+  TRAIN_FILE_2 = '/Users/zhuxinyue/ML/tfrecords/faces.tfrecords'
 
   with tf.Graph().as_default():
     reader1 = Reader(TRAIN_FILE_1, batch_size=2)
@@ -75,10 +72,11 @@ def test_reader():
       step = 0
       while not coord.should_stop():
         batch_images1, batch_images2 = sess.run([images_op1, images_op2])
-        print("image shape: {}".format(batch_images1))
-        print("image shape: {}".format(batch_images2))
+        print("image1 shape: {}".format(batch_images1.shape))
+        print("image1 shape: {}".format(batch_images2.shape))
         print("="*10)
         step += 1
+        sys.exit()
     except KeyboardInterrupt:
       print('Interrupted')
       coord.request_stop()
@@ -89,5 +87,5 @@ def test_reader():
       coord.request_stop()
       coord.join(threads)
 
-if __name__ == '__main__':
-  test_reader()
+# if __name__ == '__main__':
+#   test_reader()
