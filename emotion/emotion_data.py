@@ -4,6 +4,11 @@
 # @Email    : zxybuptsee@163.com
 # @File     : emotion_data.py
 # @Software : PyCharm
+
+'''
+Emotion dataset comes from https://github.com/sjchoi86/img_dataset
+'''
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -25,7 +30,7 @@ def display_image(image):
 
     plt.imshow(dis_image)
 
-def load_data(data_set, data_path, classes):
+def load_data(data_set, data_path, classes, bound1, bound2):
     images = []
     test_images = []
     test_cls = []
@@ -45,7 +50,7 @@ def load_data(data_set, data_path, classes):
             # print(fl)
             obj_num = int((fl.split('/')[-1]).split('.')[0])
             # throw away test data
-            if obj_num < 6000 and data_set == 'train':
+            if obj_num < bound1 and data_set == 'train':
                 image = misc.imread(fl)
                 image = np.reshape(image, [48, 48, 1])
                 images.append(image)
@@ -56,7 +61,7 @@ def load_data(data_set, data_path, classes):
 
                 cls.append(obj)
             else:
-                if obj_num < 2000 and data_set == 'test':
+                if obj_num < bound2 and data_set == 'test':
                     image = misc.imread(fl)
                     image = np.reshape(image, [48, 48, 1])
                     test_images.append(image)
@@ -85,9 +90,9 @@ def load_data(data_set, data_path, classes):
 
         return test_images, test_cls
 
-def read_train_sets(data_path, classes, validation_size):
+def read_train_sets(data_path, classes, validation_size, bound_train):
 
-  images, labels, cls = load_data('train', data_path, classes)
+  images, labels, cls = load_data('train', data_path, classes, bound_train, 0)
   images, labels, cls = shuffle(images, labels, cls)  # shuffle the data
 
   if isinstance(validation_size, float):
@@ -108,8 +113,8 @@ def read_train_sets(data_path, classes, validation_size):
   return train_images, train_labels, train_cls, val_images, val_labels, val_cls
 
 
-def read_test_set(data_path, classes):
-  images, cls  = load_data('test', data_path, classes)
+def read_test_set(data_path, classes, bound_test):
+  images, cls  = load_data('test', data_path, classes, 0, bound_test)
   return images, cls
 
 def inputs(image, label, cls, batch_size, capacity, min_after_dequeue):
