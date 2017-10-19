@@ -7,7 +7,7 @@
 
 import tensorflow as tf
 import CycleGAN.cycle_ops as ops
-import utils
+import CycleGAN.utils as utils
 
 class Generator:
   def __init__(self, name, is_training, ngf=64, norm='instance', image_size=128):
@@ -58,3 +58,9 @@ class Generator:
     self.variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
 
     return output
+
+
+  def sample(self, input):
+    image = utils.batch_convert2int(self.__call__(input))
+    image = tf.image.encode_jpeg(tf.squeeze(image, [0]))
+    return image

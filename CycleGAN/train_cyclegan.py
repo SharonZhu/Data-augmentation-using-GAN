@@ -43,7 +43,7 @@ tf.flags.DEFINE_string('X', '/Users/zhuxinyue/ML/tfrecords/faces.tfrecords',
                        'X tfrecords file for training, default: data/tfrecords/apple.tfrecords')
 tf.flags.DEFINE_string('Y', '/Users/zhuxinyue/ML/tfrecords/emotion.tfrecords',
                        'Y tfrecords file for training, default: data/tfrecords/orange.tfrecords')
-tf.flags.DEFINE_string('load_model', None,
+tf.flags.DEFINE_string('load_model', '20171018-1457',
                         'folder of saved model that you wish to continue training (e.g. 20170602-1936), default: None')
 
 def train():
