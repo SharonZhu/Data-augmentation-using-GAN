@@ -36,6 +36,8 @@ class CycleGAN(object):
         self.model_name = "cycleWGAN"     # name for checkpoint
         self.is_training = tf.placeholder_with_default(True, shape=[], name='is_training')
         self.norm = 'instance'
+        self.X_train_file = ''
+        self.Y_train_file = ''
 
         if dataset_name == 'face_emotion':
             self.X_train_file = X_train_file

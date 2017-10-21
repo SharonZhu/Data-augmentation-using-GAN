@@ -30,6 +30,41 @@ def display_image(image):
 
     plt.imshow(dis_image)
 
+
+def load_caltech101(data_path, image_size):
+    images = []
+    labels = []
+    files = os.listdir(data_path)
+
+    for fl in files:
+        file = data_path + fl
+        image = misc.imread(file, mode='L')
+        image = misc.imresize(image, [image_size, image_size])
+
+        '''test image'''
+        # print(image.shape)
+        # display_image(image, True)
+        # plt.show()
+        # sys.exit()
+
+        image = np.reshape(image, [image_size, image_size, -1])
+        # print(image.shape)
+        images.append(image)
+
+        # label = 1.0
+        # labels.append(label)
+
+    images_uint = np.array(images, dtype=np.uint8)
+
+    images = np.array(images, dtype=np.float32)
+    # labels = np.array(labels, dtype=np.int64)
+
+    print('Loding training data completed')
+    print('images_shape:', images.shape)
+    # print('labels_shape:', labels.shape)
+
+    return images_uint, images/255
+
 def load_data(data_set, data_path, classes, bound1, bound2):
     images = []
     test_images = []

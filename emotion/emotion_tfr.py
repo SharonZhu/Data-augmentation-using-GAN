@@ -12,8 +12,8 @@ import emotion.emotion_data as data
 from utils import load_caltech101
 import matplotlib.pyplot as plt
 
-tfrecords_filename_emotion = '/Users/zhuxinyue/ML/tfrecords/emotion.tfrecords'
-tfrecords_filename_faces = '/Users/zhuxinyue/ML/tfrecords/faces.tfrecords'
+tfrecords_filename_disgust = '/Users/zhuxinyue/ML/tfrecords/disgust.tfrecords'
+tfrecords_filename_neutral = '/Users/zhuxinyue/ML/tfrecords/neutral.tfrecords'
 data_path_emotion = '/Users/zhuxinyue/ML/face_emotion/'
 data_path_faces = '/Users/zhuxinyue/ML/Caltech101/Faces_easy/'
 
@@ -34,12 +34,12 @@ def conver_to_tfrecord(set, tfrecords_filename, data_path, classes):
     if set == 'train':
         mode = tfrecords_filename.split('/')[-1].split('.')[0]
         print(mode)
-        if mode == 'emotion':
-            images, lables, _, _, _, _ = data.read_train_sets(data_path, classes, 0, 30000)
+        if mode == 'disgust':
+            images, lables, _, _, _, _ = data.read_train_sets(data_path, classes, 0, 40000)
             # print(images.shape)
         else:
-            if mode == 'faces':
-                _, images = load_caltech101(data_path_faces, 48)
+            if mode == 'neutral':
+                images, lables, _, _, _, _ = data.read_train_sets(data_path, classes, 0, 5000)
                 # print(images.shape)
             else:
                 images, labels = [None, None]
@@ -70,12 +70,14 @@ def main(unused_argv):
   print(data_path_faces.split('/')[-2])
   # classes_emotion = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
   classes_emotion = ['disgust']
-  conver_to_tfrecord('train', tfrecords_filename_emotion, data_path_emotion, classes_emotion)
+  conver_to_tfrecord('train', tfrecords_filename_disgust, data_path_emotion, classes_emotion)
   print('Load successfully')
 
   print("Convert face data to tfrecords...")
-  classes_faces = ['Faces_easy']
-  conver_to_tfrecord('train', tfrecords_filename_faces, data_path_faces, classes_faces)
+  # classes_faces = ['Faces_easy']
+  # conver_to_tfrecord('train', tfrecords_filename_faces, data_path_faces, classes_faces)
+  classes_emotion = ['neutral']
+  conver_to_tfrecord('train', tfrecords_filename_neutral, data_path_emotion, classes_emotion)
 
 if __name__ == '__main__':
   tf.app.run()

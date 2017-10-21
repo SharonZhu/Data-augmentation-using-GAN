@@ -11,7 +11,7 @@ from __future__ import print_function
 
 import sys
 import tensorflow as tf
-from CycleGAN.cycleGAN import CycleGAN
+from CycleGAN.model import CycleGAN
 from CycleGAN.reader import Reader
 from datetime import datetime
 import os
@@ -36,14 +36,14 @@ tf.flags.DEFINE_float('beta1', 0.5,
                       'momentum term of Adam, default: 0.5')
 tf.flags.DEFINE_float('pool_size', 30,
                       'size of image buffer that stores previously generated images, default: 50')
-tf.flags.DEFINE_integer('ngf', 32,
+tf.flags.DEFINE_integer('ngf', 64,
                         'number of gen filters in first conv layer, default: 64')
 
-tf.flags.DEFINE_string('X', '/Users/zhuxinyue/ML/tfrecords/faces.tfrecords',
+tf.flags.DEFINE_string('X', '/Users/zhuxinyue/ML/tfrecords/neutral.tfrecords',
                        'X tfrecords file for training, default: data/tfrecords/apple.tfrecords')
-tf.flags.DEFINE_string('Y', '/Users/zhuxinyue/ML/tfrecords/emotion.tfrecords',
+tf.flags.DEFINE_string('Y', '/Users/zhuxinyue/ML/tfrecords/disgust.tfrecords',
                        'Y tfrecords file for training, default: data/tfrecords/orange.tfrecords')
-tf.flags.DEFINE_string('load_model', '20171018-1457',
+tf.flags.DEFINE_string('load_model', '20171021-1558',
                         'folder of saved model that you wish to continue training (e.g. 20170602-1936), default: None')
 
 def train():

@@ -14,19 +14,20 @@ python export_graph.py --checkpoint_dir checkpoints/20171018-1457 \
                        --image_size 48
 """
 
+import sys
 import tensorflow as tf
 import os
 from tensorflow.python.tools.freeze_graph import freeze_graph
-from CycleGAN.cycleGAN import CycleGAN
+from CycleGAN.model import CycleGAN as CG
 import CycleGAN.utils
 
 FLAGS = tf.flags.FLAGS
 
-tf.flags.DEFINE_string('checkpoint_dir', '', 'checkpoints directory path')
+tf.flags.DEFINE_string('checkpoint_dir', 'checkpoints/20171018-1457/', 'checkpoints directory path')
 tf.flags.DEFINE_string('XtoY_model', 'face2emotion.pb', 'XtoY model name, default: apple2orange.pb')
 tf.flags.DEFINE_string('YtoX_model', 'emotion2face.pb', 'YtoX model name, default: orange2apple.pb')
 tf.flags.DEFINE_integer('image_size', '48', 'image size, default: 256')
-tf.flags.DEFINE_integer('ngf', 32,
+tf.flags.DEFINE_integer('ngf', 64,
                         'number of gen filters in first conv layer, default: 64')
 tf.flags.DEFINE_string('norm', 'instance',
                        '[instance, batch] use instance norm or batch norm, default: instance')
@@ -35,7 +36,12 @@ def export_graph(model_name, XtoY=True):
   graph = tf.Graph()
 
   with graph.as_default():
-    cycle_gan = CycleGAN(ngf=FLAGS.ngf, norm=FLAGS.norm, image_size=FLAGS.image_size)
+    # cycle_gan = CycleGAN(ngf=FLAGS.ngf, norm=FLAGS.norm, image_size=FLAGS.image_size)
+    cycle_gan = CG(
+        X_train_file='',
+        Y_train_file='',
+        dataset_name='face_emotion',
+        batch_size=1)
 
     input_image = tf.placeholder(tf.float32, shape=[FLAGS.image_size, FLAGS.image_size, 1], name='input_image')
     cycle_gan.model()
@@ -45,6 +51,7 @@ def export_graph(model_name, XtoY=True):
     else:
       output_image = cycle_gan.F.sample(tf.expand_dims(input_image, 0))
 
+    print(output_image)
     output_image = tf.identity(output_image, name='output_image')
     restore_saver = tf.train.Saver()
     # export_saver = tf.train.Saver()
