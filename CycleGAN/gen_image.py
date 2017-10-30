@@ -25,12 +25,12 @@ FLAGS = tf.flags.FLAGS
 
 # tf.flags.DEFINE_string('model', 'pretrained/face2emotion.pb', 'model path (.pb)')
 tf.flags.DEFINE_string('input', 'image_0001.jpg', 'input image path (.jpg)')
-tf.flags.DEFINE_string('inputdir', '/Users/zhuxinyue/ML/Caltech101/Faces_easy/', 'input image dir')
+tf.flags.DEFINE_string('inputdir', '/Users/zhuxinyue/ML/face_emotion/', 'input image dir')
 # tf.flags.DEFINE_string('output', 'output_sample.jpg', 'output image path (.jpg)')
 tf.flags.DEFINE_integer('image_size', '48', 'image size, default: 256')
-
-tf.flags.DEFINE_string('checkpoint_dir', 'checkpoints/20171018-1457/', 'checkpoints directory path')
-tf.flags.DEFINE_string('result_dir', '/Users/zhuxinyue/ML/gen_CG/', 'checkpoints directory path')
+os.mkdir('/Users/zhuxinyue/ML/gen_CG_surprise72w/')
+tf.flags.DEFINE_string('checkpoint_dir', 'checkpoints/surprise-1026/', 'checkpoints directory path')
+tf.flags.DEFINE_string('result_dir', '/Users/zhuxinyue/ML/gen_CG_surprise72w/', 'checkpoints directory path')
 tf.flags.DEFINE_integer('ngf', 64,
                         'number of gen filters in first conv layer, default: 64')
 tf.flags.DEFINE_string('norm', 'instance',
@@ -87,6 +87,7 @@ def restore_gen():
             # _, face_images = load_caltech101(FLAGS.inputdir, FLAGS.image_size)
             classes = ['neutral']
             face_images, lables, _, _, _, _ = read_train_sets(FLAGS.inputdir, classes, 0, 5000)
+            print(face_images.shape)
             gen_num = face_images.shape[0]
             print(gen_num)
 

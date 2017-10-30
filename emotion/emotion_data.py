@@ -152,6 +152,41 @@ def read_test_set(data_path, classes, bound_test):
   images, cls  = load_data('test', data_path, classes, 0, bound_test)
   return images, cls
 
+def load_gan_image(genpath, classes, gan_class):
+    images = []
+    labels = []
+    clss = []
+    files = os.listdir(genpath)
+    index = classes.index(gan_class)
+    cls = gan_class
+
+    for fl in files:
+        file = genpath + fl
+        if file.split('.')[-1] != 'jpg':
+            continue
+        image = misc.imread(file, mode='L')
+        image = np.reshape(image, [48, 48, 1])
+        images.append(image)
+
+        label = np.zeros(len(classes), dtype=np.float32)
+        label[index] = 1.0
+        labels.append(label)
+
+        clss.append(cls)
+    # images_uint = np.array(images, dtype=np.uint8)
+
+    images = np.array(images, dtype=np.float32)
+    labels = np.array(labels, dtype=np.int64)
+    clss = np.array(clss)
+
+    print('Loding training data completed')
+    print('images_shape:', images.shape)
+    print('labels_shape:', labels.shape)
+    cls_num = Counter(clss)
+    print(cls_num)
+
+    return images / 255, labels, clss
+
 def inputs(image, label, cls, batch_size, capacity, min_after_dequeue):
     '''
     Input a batch of data

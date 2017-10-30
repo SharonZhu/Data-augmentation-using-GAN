@@ -13,7 +13,12 @@ from utils import load_caltech101
 import matplotlib.pyplot as plt
 
 tfrecords_filename_disgust = '/Users/zhuxinyue/ML/tfrecords/disgust.tfrecords'
+tfrecords_filename_sad = '/Users/zhuxinyue/ML/tfrecords/sad.tfrecords'
+tfrecords_filename_angry = '/Users/zhuxinyue/ML/tfrecords/angry.tfrecords'
 tfrecords_filename_neutral = '/Users/zhuxinyue/ML/tfrecords/neutral.tfrecords'
+tfrecords_filename_fear = '/Users/zhuxinyue/ML/tfrecords/fear.tfrecords'
+tfrecords_filename_happy = '/Users/zhuxinyue/ML/tfrecords/happy.tfrecords'
+tfrecords_filename_surprise = '/Users/zhuxinyue/ML/tfrecords/surprise.tfrecords'
 data_path_emotion = '/Users/zhuxinyue/ML/face_emotion/'
 data_path_faces = '/Users/zhuxinyue/ML/Caltech101/Faces_easy/'
 
@@ -39,10 +44,22 @@ def conver_to_tfrecord(set, tfrecords_filename, data_path, classes):
             # print(images.shape)
         else:
             if mode == 'neutral':
-                images, lables, _, _, _, _ = data.read_train_sets(data_path, classes, 0, 5000)
+                images, lables, _, _, _, _ = data.read_train_sets(data_path, classes, 0, 10000)
                 # print(images.shape)
             else:
-                images, labels = [None, None]
+                if mode == 'sad' or mode == 'angry':
+                    images, lables, _, _, _, _ = data.read_train_sets(data_path, classes, 0, 10000)
+                else:
+                    if mode == 'fear':
+                        images, lables, _, _, _, _ = data.read_train_sets(data_path, classes, 0, 12000)
+                    else:
+                        if mode == 'happy':
+                            images, lables, _, _, _, _ = data.read_train_sets(data_path, classes, 0, 7000)
+                        else:
+                            if mode == 'surprise':
+                                images, lables, _, _, _, _ = data.read_train_sets(data_path, classes, 0, 14000)
+                            else:
+                                images, labels = [None, None]
     else:
         if set == 'test':
             images, labels = data.read_test_set(data_path, classes, 3000)
@@ -69,8 +86,8 @@ def main(unused_argv):
   print("Convert emotion data to tfrecords...")
   print(data_path_faces.split('/')[-2])
   # classes_emotion = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
-  classes_emotion = ['disgust']
-  conver_to_tfrecord('train', tfrecords_filename_disgust, data_path_emotion, classes_emotion)
+  classes_emotion = ['surprise']
+  conver_to_tfrecord('train', tfrecords_filename_surprise, data_path_emotion, classes_emotion)
   print('Load successfully')
 
   print("Convert face data to tfrecords...")
