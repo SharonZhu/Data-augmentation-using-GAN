@@ -18,13 +18,13 @@ import os
 import emotion.emotion_data as data
 
 data_path = '/Users/zhuxinyue/ML/face_emotion/'
-logs_train_dir = '../emotion/logs/gan_real/'
-logs_var_dir = '../emotion/logs/gan_real/'
+logs_train_dir = '../emotion/logs/gan_dands/'
+logs_var_dir = '../emotion/logs/gan_dands/'
 
 BATCH_SIZE = 1
-N_CLASSES = 6
+N_CLASSES = 7
 image_size = 48
-classes = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise']
+classes = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
 
 def evaluate_one_image(test_image, test_cls, logs_train_dir):
     # display image
@@ -35,7 +35,7 @@ def evaluate_one_image(test_image, test_cls, logs_train_dir):
 
         test_image = np.reshape(test_image, [BATCH_SIZE, image_size, image_size, 1])
 
-        logit = model.inference(test_image, BATCH_SIZE, N_CLASSES)
+        logit, _ = model.inference(test_image, BATCH_SIZE, N_CLASSES)
         logit = tf.nn.softmax(logit)
 
         saver = tf.train.Saver()
@@ -66,7 +66,7 @@ def main(argv=None):  # pylint: disable=unused-argument
     right_pred_cls = np.zeros(shape=[N_CLASSES], dtype=np.int64)
     cls_accuracy = []
 
-    test_images, test_clss = data.read_test_set(data_path, classes, 4000)
+    test_images, test_clss = data.read_test_set(data_path, classes, 2000)
     test_num = test_images.shape[0]
     print('Number of test data:', test_num)
 

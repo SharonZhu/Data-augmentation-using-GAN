@@ -18,8 +18,8 @@ from emotion import emotion_data as data
 import emotion.emotion_model as model
 
 data_path = '/Users/zhuxinyue/ML/face_emotion/'
-logs_train_dir = 'logs/gan_real/'
-logs_val_dir = 'logs/gan_real/'
+logs_train_dir = 'logs/gan_dands/'
+logs_val_dir = 'logs/gan_dands/'
 gen_path = ['/Users/zhuxinyue/ML/gen_CG/angry/',
             '/Users/zhuxinyue/ML/gen_CG/disgust/',
             '/Users/zhuxinyue/ML/gen_CG/fear/',
@@ -30,33 +30,37 @@ gen_path = ['/Users/zhuxinyue/ML/gen_CG/angry/',
 IMG_H = 48
 IMG_W = 48
 
-classes = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise']
-N_CLASSES = 6
+classes = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
+N_CLASSES = 7
 
 BATCH_SIZE = 32
 CAPACITY = 1000 + 3*BATCH_SIZE
 MIN_AFTER_DEQUEUE = 500
-MAX_STEP = 10000
+MAX_STEP = 20000
 learning_rate = 0.001
 
 def run_training():
     # load data
     # tra_img, tra_label, tra_cls, val_img, val_label, val_cls = data.read_train_sets(
     #     data_path, classes, validation_size=0.1, bound_train=6000)
-    '''
-    angry_img, angry_label, angry_cls = data.load_gan_image(gen_path[0], classes, 'angry')
-    disgust_img, disgust_label, disgust_cls = data.load_gan_image(gen_path[1], classes, 'disgust')
-    fear_img, fear_label, fear_cls = data.load_gan_image(gen_path[2], classes, 'fear')
-    happy_img, happy_label, happy_cls = data.load_gan_image(gen_path[3], classes, 'happy')
-    sad_img, sad_label, sad_cls = data.load_gan_image(gen_path[4], classes, 'sad')
-    surprise_img, surprise_label, surprise_cls = data.load_gan_image(gen_path[5], classes, 'surprise')
 
-    concat_images = np.concatenate([angry_img, disgust_img, fear_img, happy_img, sad_img, surprise_img],
+    # angry_img, angry_label, angry_cls = data.load_gan_image(gen_path[0], classes, 'angry')
+    disgust_img, disgust_label, disgust_cls = data.load_gan_image(gen_path[1], classes, 'disgust')
+    # fear_img, fear_label, fear_cls = data.load_gan_image(gen_path[2], classes, 'fear')
+    # happy_img, happy_label, happy_cls = data.load_gan_image(gen_path[3], classes, 'happy')
+    sad_img, sad_label, sad_cls = data.load_gan_image(gen_path[4], classes, 'sad')
+    # surprise_img, surprise_label, surprise_cls = data.load_gan_image(gen_path[5], classes, 'surprise')
+
+
+    tra_img, tra_label, tra_cls, val_img, val_label, val_cls = data.read_train_sets(
+        data_path, classes, validation_size=0.1, bound_train=6000)
+
+    concat_images = np.concatenate([tra_img, disgust_img, sad_img],
                                    axis=0)
-    concat_labels = np.concatenate([angry_label, disgust_label, fear_label, happy_label, sad_label,
-                                    surprise_label], axis=0)
-    concat_clss = np.concatenate([angry_cls, disgust_cls, fear_cls, happy_cls, sad_cls, surprise_cls],
+    concat_labels = np.concatenate([tra_label, disgust_label, sad_label], axis=0)
+    concat_clss = np.concatenate([tra_cls, disgust_cls, sad_cls],
                                  axis=0)
+
     # print(gan_label[0])
     # concat_images = np.concatenate([tra_img, gan_img])
     # concat_lables = np.concatenate([tra_label, gan_label])
@@ -64,13 +68,11 @@ def run_training():
     print(concat_images.shape)
     print(concat_labels.shape)
     print(concat_labels[1000])
-    '''
-    tra_img, tra_label, tra_cls, val_img, val_label, val_cls = data.read_train_sets(
-        data_path, classes, validation_size=0.1, bound_train=6000)
-    train_images, train_labels, train_clss= data.inputs(tra_img, tra_label, tra_cls,
-                                             BATCH_SIZE, CAPACITY, MIN_AFTER_DEQUEUE)
-    # train_images, train_labels, train_clss = data.inputs(concat_images, concat_labels, concat_clss,
-    #                                                      BATCH_SIZE, CAPACITY, MIN_AFTER_DEQUEUE)
+
+    # train_images, train_labels, train_clss= data.inputs(tra_img, tra_label, tra_cls,
+    #                                          BATCH_SIZE, CAPACITY, MIN_AFTER_DEQUEUE)
+    train_images, train_labels, train_clss = data.inputs(concat_images, concat_labels, concat_clss,
+                                                         BATCH_SIZE, CAPACITY, MIN_AFTER_DEQUEUE)
     val_images, val_labels, val_clss= data.inputs(val_img, val_label, val_cls,
                                              BATCH_SIZE, CAPACITY, MIN_AFTER_DEQUEUE)
     print(train_images.shape)
@@ -102,7 +104,6 @@ def run_training():
             print("successful loading,global step is %s" % global_step)
         else:
             print("no checkpoint file founded")
-            return
 
         try:
             for step in np.arange(MAX_STEP):

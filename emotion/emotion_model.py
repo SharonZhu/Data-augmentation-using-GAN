@@ -110,7 +110,7 @@ def inference(images, batch_size, n_classes):
         # epsilon = tf.constant(0.001, shape=[n_classes])
         #
         # softmax_linear += epsilon
-    return softmax_linear
+    return softmax_linear, fc2
 
 
 def losses(logits,labels):

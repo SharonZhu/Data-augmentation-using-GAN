@@ -87,6 +87,9 @@ def load_data(data_set, data_path, classes, bound1, bound2):
             # throw away test data
             if obj_num < bound1 and data_set == 'train':
                 image = misc.imread(fl)
+                # '''when doing embedding'''
+                # image = misc.imresize(image, [8, 8])
+                # image = np.reshape(image, [8, 8, 1])
                 image = np.reshape(image, [48, 48, 1])
                 images.append(image)
 
