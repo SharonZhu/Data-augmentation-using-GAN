@@ -19,12 +19,15 @@ import time
 import tensorflow as tf
 import numpy as np
 
-import CycleGAN.cycle_ops as ops
+sys.path.append('../CycleGAN/')
+import cycle_ops as ops
+sys.path.append('../')
 from utils import *
-from emotion.emotion_data import read_train_sets
-from CycleGAN.discriminator import Discriminator
-from CycleGAN.generator import Generator
-from CycleGAN.reader import Reader
+# from emotion.emotion_data import read_train_sets
+from discriminator import Discriminator
+from generator import Generator
+from reader import Reader
+
 
 
 REAL_LABEL = 0.9
@@ -59,22 +62,48 @@ class CycleGAN(object):
             self.beta1 = 0.5
 
         else:
-            if dataset_name == 'generate':
-                self.image_size = 48
-                self.output_height = 48
-                self.output_width = 48
+            if dataset_name == 'sfew':
+                self.X_train_file = X_train_file
+                self.Y_train_file = Y_train_file
+                # dataset_dir = '/Users/zhuxinyue/ML/' + dataset_name + '/'
 
-                self.c_dim = 1  # dimension of channels?
+                # parameters
+                self.image_size = 128
 
-                # WGAN parameter
+                self.c_dim = 3  # dimension of channels?
+                self.ngf = 64
+
+                # CycleGAN parameter
                 self.disc_iters = 5  # The number of critic iterations for one-step of generator
 
                 # train
-                self.learning_rate = 0.0002
+                self.learning_rate = 0.0001
+                self.lambda1 = 10.0,
+                self.lambda2 = 10.0,
                 self.beta1 = 0.5
 
             else:
-                raise NotImplementedError
+                if dataset_name == 'test':
+                    self.X_train_file = X_train_file
+                    self.Y_train_file = Y_train_file
+                    # dataset_dir = '/Users/zhuxinyue/ML/' + dataset_name + '/'
+
+                    # parameters
+                    self.image_size = None
+
+                    self.c_dim = 3  # dimension of channels?
+                    self.ngf = 64
+
+                    # CycleGAN parameter
+                    self.disc_iters = 5  # The number of critic iterations for one-step of generator
+
+                    # train
+                    self.learning_rate = 0.0001
+                    self.lambda1 = 10.0,
+                    self.lambda2 = 10.0,
+                    self.beta1 = 0.5
+                else:
+                    raise NotImplementedError
 
         # Generator X --> Y
         self.G = Generator('G', self.is_training, ngf=self.ngf, norm=self.norm, image_size=self.image_size)
@@ -87,21 +116,29 @@ class CycleGAN(object):
         self.D_X = Discriminator('D_X',
                                  self.is_training, norm=self.norm, use_sigmoid=False)
 
+        # self.fake_x = tf.placeholder(tf.float32,
+        #                              shape=[batch_size, self.image_size, self.image_size, 3])
+        # self.fake_y = tf.placeholder(tf.float32,
+        #                              shape=[batch_size, self.image_size, self.image_size, 3])
         self.fake_x = tf.placeholder(tf.float32,
-                                     shape=[batch_size, self.image_size, self.image_size, 1])
+                                     shape=[batch_size, 3])
         self.fake_y = tf.placeholder(tf.float32,
-                                     shape=[batch_size, self.image_size, self.image_size, 1])
+                                     shape=[batch_size, 3])
 
 
     def model(self):
-        X_reader = Reader(self.X_train_file, name='X',
-                          image_size=self.image_size, batch_size=self.batch_size)
-        Y_reader = Reader(self.Y_train_file, name='Y',
-                          image_size=self.image_size, batch_size=self.batch_size)
+        if self.X_train_file != None and self.Y_train_file != None:
+            X_reader = Reader(self.X_train_file, name='X',
+                              image_size=self.image_size, batch_size=self.batch_size)
+            Y_reader = Reader(self.Y_train_file, name='Y',
+                              image_size=self.image_size, batch_size=self.batch_size)
 
-        x = X_reader.feed()
-        y = Y_reader.feed()
+            x = X_reader.feed()
+            y = Y_reader.feed()
 
+        else:
+            x = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, 3])
+            y = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, 3])
         """ Loss Function """
 
         cycle_loss = self.cycle_consistency_loss(self.G, self.F, x, y)
@@ -109,6 +146,7 @@ class CycleGAN(object):
 
         # X -> Y
         fake_y = self.G(x)  # __call__(input)
+        print(fake_y)
         G_gan_loss = self.generator_loss(self.D_Y, fake_y, use_lsgan=True)
         print(G_gan_loss)
         G_loss = G_gan_loss + cycle_loss
@@ -116,6 +154,7 @@ class CycleGAN(object):
 
         # Y -> X
         fake_x = self.F(y)
+        print(fake_x)
         F_gan_loss = self.generator_loss(self.D_X, fake_x, use_lsgan=True)
         F_loss = F_gan_loss + cycle_loss
         D_X_loss = self.discriminator_loss(self.D_X, x, self.fake_x, use_lsgan=True)

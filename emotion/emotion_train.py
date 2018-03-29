@@ -17,57 +17,57 @@ import numpy as np
 from emotion import emotion_data as data
 import emotion.emotion_model as model
 
-data_path = '/Users/zhuxinyue/ML/face_emotion/'
-logs_train_dir = 'logs/gan_dands/'
-logs_val_dir = 'logs/gan_dands/'
-gen_path = ['/Users/zhuxinyue/ML/gen_CG/angry/',
-            '/Users/zhuxinyue/ML/gen_CG/disgust/',
-            '/Users/zhuxinyue/ML/gen_CG/fear/',
-            '/Users/zhuxinyue/ML/gen_CG/happy/',
-            '/Users/zhuxinyue/ML/gen_CG/sad/',
-            '/Users/zhuxinyue/ML/gen_CG/surprise/']
+data_path = '/Users/zhuxinyue/ML/SFEW/train2/'
+logs_train_dir = 'logs2/gan/'
+logs_train_dir2 = 'logs2/gan/'
+logs_val_dir2 = 'logs2/gan/'
+gen_path = ['/Users/zhuxinyue/ML/SFEW/generate/angry/',
+            '/Users/zhuxinyue/ML/SFEW/generate/disgust/',
+            '/Users/zhuxinyue/ML/SFEW/generate/fear/',
+            '/Users/zhuxinyue/ML/SFEW/generate/happy/',
+            '/Users/zhuxinyue/ML/SFEW/generate/sad/',
+            '/Users/zhuxinyue/ML/SFEW/generate/surprise/']
 
 IMG_H = 48
 IMG_W = 48
 
-classes = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
-N_CLASSES = 7
+classes = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise']
+N_CLASSES = 6
 
 BATCH_SIZE = 32
 CAPACITY = 1000 + 3*BATCH_SIZE
 MIN_AFTER_DEQUEUE = 500
-MAX_STEP = 20000
+MAX_STEP = 10000
 learning_rate = 0.001
 
 def run_training():
     # load data
     # tra_img, tra_label, tra_cls, val_img, val_label, val_cls = data.read_train_sets(
-    #     data_path, classes, validation_size=0.1, bound_train=6000)
+    #     data_path, classes, validation_size=0, bound_train=None)
 
     # angry_img, angry_label, angry_cls = data.load_gan_image(gen_path[0], classes, 'angry')
-    disgust_img, disgust_label, disgust_cls = data.load_gan_image(gen_path[1], classes, 'disgust')
-    # fear_img, fear_label, fear_cls = data.load_gan_image(gen_path[2], classes, 'fear')
+    disgust_img, disgust_label, disgust_cls = data.load_gan_image(gen_path[1], classes, 'disgust', channel=1)
+    fear_img, fear_label, fear_cls = data.load_gan_image(gen_path[2], classes, 'fear', channel=1)
     # happy_img, happy_label, happy_cls = data.load_gan_image(gen_path[3], classes, 'happy')
-    sad_img, sad_label, sad_cls = data.load_gan_image(gen_path[4], classes, 'sad')
+    # sad_img, sad_label, sad_cls = data.load_gan_image(gen_path[4], classes, 'sad')
     # surprise_img, surprise_label, surprise_cls = data.load_gan_image(gen_path[5], classes, 'surprise')
 
-
     tra_img, tra_label, tra_cls, val_img, val_label, val_cls = data.read_train_sets(
-        data_path, classes, validation_size=0.1, bound_train=6000)
+        data_path, classes, validation_size=0.05, channel=1)
 
-    concat_images = np.concatenate([tra_img, disgust_img, sad_img],
+    concat_images = np.concatenate([tra_img, disgust_img, fear_img],
                                    axis=0)
-    concat_labels = np.concatenate([tra_label, disgust_label, sad_label], axis=0)
-    concat_clss = np.concatenate([tra_cls, disgust_cls, sad_cls],
+    concat_labels = np.concatenate([tra_label, disgust_label, fear_label], axis=0)
+    concat_clss = np.concatenate([tra_cls, disgust_cls, fear_cls],
                                  axis=0)
 
     # print(gan_label[0])
     # concat_images = np.concatenate([tra_img, gan_img])
     # concat_lables = np.concatenate([tra_label, gan_label])
     # concat_clss = np.concatenate([tra_cls, gen_cls])
-    print(concat_images.shape)
-    print(concat_labels.shape)
-    print(concat_labels[1000])
+    # print(concat_images.shape)
+    # print(concat_labels.shape)
+    # print(concat_labels[1000])
 
     # train_images, train_labels, train_clss= data.inputs(tra_img, tra_label, tra_cls,
     #                                          BATCH_SIZE, CAPACITY, MIN_AFTER_DEQUEUE)
@@ -78,7 +78,7 @@ def run_training():
     print(train_images.shape)
     print(train_labels.shape)
 
-    train_logits = model.inference(train_images, BATCH_SIZE, N_CLASSES)
+    train_logits, _ = model.inference(train_images, BATCH_SIZE, N_CLASSES)
     train_loss = model.losses(train_logits, train_labels)
     train_op = model.training(train_loss, learning_rate)
     train_eval = model.evaluation(train_logits, train_labels)
@@ -89,8 +89,8 @@ def run_training():
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
         summary_op = tf.summary.merge_all()
-        train_writer = tf.summary.FileWriter(logs_train_dir,sess.graph)
-        val_writer = tf.summary.FileWriter(logs_val_dir,sess.graph)
+        train_writer = tf.summary.FileWriter(logs_train_dir2,sess.graph)
+        val_writer = tf.summary.FileWriter(logs_val_dir2,sess.graph)
 
         x_image = tf.placeholder(tf.float32, shape=[BATCH_SIZE, IMG_H, IMG_W, 1])
         y_true = tf.placeholder(tf.float32, shape=[BATCH_SIZE, N_CLASSES])
@@ -131,7 +131,7 @@ def run_training():
                     summary_str = sess.run(summary_op)
                     val_writer.add_summary(summary_str, step)
                 if step % 500 == 0 or (step + 1) == MAX_STEP:
-                    checkpoint_path = os.path.join(logs_train_dir, 'model.ckpt')
+                    checkpoint_path = os.path.join(logs_train_dir2, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=step)
         except tf.errors.OutOfRangeError:
             print('Done training')

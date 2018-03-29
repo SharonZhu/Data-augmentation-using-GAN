@@ -65,7 +65,7 @@ def load_caltech101(data_path, image_size):
 
     return images_uint, images/255
 
-def load_data(data_set, data_path, classes, bound1, bound2):
+def load_data(data_set, data_path, classes, bound1, channel):
     images = []
     test_images = []
     test_cls = []
@@ -83,15 +83,31 @@ def load_data(data_set, data_path, classes, bound1, bound2):
 
         for fl in files:
             # print(fl)
-            obj_num = int((fl.split('/')[-1]).split('.')[0])
+            # obj_num = int((fl.split('/')[-1]).split('.')[0])
             # throw away test data
-            if obj_num < bound1 and data_set == 'train':
-                image = misc.imread(fl)
-                # '''when doing embedding'''
-                # image = misc.imresize(image, [8, 8])
-                # image = np.reshape(image, [8, 8, 1])
-                image = np.reshape(image, [48, 48, 1])
-                images.append(image)
+            if data_set == 'train':
+                if channel == 1:
+                    image = misc.imread(fl, mode='L')
+                    # '''when doing embedding'''
+                    # image = misc.imresize(image, [8, 8])
+                    # image = np.reshape(image, [8, 8, 1])
+                    image = misc.imresize(image, [48, 48])
+                    image = np.reshape(image, [48, 48, -1])
+                    if image.shape[2] != 1:
+                        print('error')
+                        sys.exit()
+                    images.append(image)
+                if channel == 3:
+                    image = misc.imread(fl)
+                    # '''when doing embedding'''
+                    # image = misc.imresize(image, [8, 8])
+                    # image = np.reshape(image, [8, 8, 1])
+                    image = misc.imresize(image, [128, 128])
+                    image = np.reshape(image, [128, 128, -1])
+                    if image.shape[2] != 3:
+                        print('error')
+                        sys.exit()
+                    images.append(image)
 
                 label = np.zeros(len(classes), dtype=np.float32)
                 label[index] = 1.0
@@ -99,10 +115,20 @@ def load_data(data_set, data_path, classes, bound1, bound2):
 
                 cls.append(obj)
             else:
-                if obj_num < bound2 and data_set == 'test':
-                    image = misc.imread(fl)
-                    image = np.reshape(image, [48, 48, 1])
-                    test_images.append(image)
+                if data_set == 'test':
+                    if channel == 1:
+                        image = misc.imread(fl, mode='L')
+                        image = misc.imresize(image, [48, 48])
+                        image = np.reshape(image, [48, 48, 1])
+                        test_images.append(image)
+                    if channel == 3:
+                        image = misc.imread(fl)
+                        image = misc.imresize(image, [128, 128])
+                        image = np.reshape(image, [128, 128, -1])
+                        if image.shape[2] != 3:
+                            print('error')
+                            sys.exit()
+                        test_images.append(image)
                     test_cls.append(obj)
 
     if data_set == 'train':
@@ -128,10 +154,10 @@ def load_data(data_set, data_path, classes, bound1, bound2):
 
         return test_images, test_cls
 
-def read_train_sets(data_path, classes, validation_size, bound_train):
+def read_train_sets(data_path, classes, validation_size, channel):
 
-  images, labels, cls = load_data('train', data_path, classes, bound_train, 0)
-  images, labels, cls = shuffle(images, labels, cls)  # shuffle the data
+  images, labels, cls = load_data('train', data_path, classes, None, channel)
+  # images, labels, cls = shuffle(images, labels, cls)  # shuffle the data
 
   if isinstance(validation_size, float):
     validation_size = int(validation_size * images.shape[0])
@@ -151,11 +177,11 @@ def read_train_sets(data_path, classes, validation_size, bound_train):
   return train_images, train_labels, train_cls, val_images, val_labels, val_cls
 
 
-def read_test_set(data_path, classes, bound_test):
-  images, cls  = load_data('test', data_path, classes, 0, bound_test)
+def read_test_set(data_path, classes, channel):
+  images, cls  = load_data('test', data_path, classes, 0, channel)
   return images, cls
 
-def load_gan_image(genpath, classes, gan_class):
+def load_gan_image(genpath, classes, gan_class, channel):
     images = []
     labels = []
     clss = []
@@ -167,9 +193,16 @@ def load_gan_image(genpath, classes, gan_class):
         file = genpath + fl
         if file.split('.')[-1] != 'jpg':
             continue
-        image = misc.imread(file, mode='L')
-        image = np.reshape(image, [48, 48, 1])
-        images.append(image)
+        if channel == 1:
+            image = misc.imread(file, mode='L')
+            image = misc.imresize(image, [48, 48])
+            image = np.reshape(image, [48, 48, 1])
+            images.append(image)
+        if channel == 3:
+            image = misc.imread(file)
+            image = misc.imresize(image, [128, 128])
+            image = np.reshape(image, [128, 128, 3])
+            images.append(image)
 
         label = np.zeros(len(classes), dtype=np.float32)
         label[index] = 1.0

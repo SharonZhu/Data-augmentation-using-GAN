@@ -7,7 +7,10 @@ Created by:
 Sources:
 http://stackoverflow.com/questions/13211745/detect-face-then-autocrop-pictures
 https://gist.github.com/astanin/3097851
+
+The code is used for doing face detection in general datasets
 '''
+
 import cv2
 import numpy as np
 from PIL import Image
@@ -132,4 +135,6 @@ def CropSetup(padding, webCheck):
 def main():
     webCheck = False
     CropSetup(padding, webCheck)
-main()
+
+if __name__ == '__main__':
+    main()

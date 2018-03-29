@@ -59,12 +59,12 @@ def inference(images, batch_size, n_classes):
         pre_activation = tf.nn.bias_add(conv, biases)
         conv2 = tf.nn.relu(pre_activation, name='conv2')
 
-    # pooling2 and norm2
-    with tf.variable_scope('pooling2') as scope:
-        norm2 = tf.nn.lrn(conv2, depth_radius=4, bias=1.0, alpha=0.001 / 9.0,
-                          beta=0.75, name='norm2')
-        pooling2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
-                                  padding='SAME', name='pooling2')
+        # pooling2 and norm2
+        with tf.variable_scope('pooling2') as scope:
+            norm2 = tf.nn.lrn(conv2, depth_radius=4, bias=1.0, alpha=0.001 / 9.0,
+                              beta=0.75, name='norm2')
+            pooling2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
+                                      padding='SAME', name='pooling2')
 
     # fc1
     with tf.variable_scope('fc1') as scope:

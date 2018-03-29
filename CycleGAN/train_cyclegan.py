@@ -9,19 +9,20 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
 import tensorflow as tf
-from CycleGAN.model import CycleGAN
-from CycleGAN.reader import Reader
+import sys
+sys.path.append('../CycleGAN/')
+from model import CycleGAN
+from reader import Reader
 from datetime import datetime
 import os
 import logging
-from CycleGAN.utils import ImagePool
+from utils import ImagePool
 
 FLAGS = tf.flags.FLAGS
 
-tf.flags.DEFINE_integer('batch_size', 1, 'batch size, default: 1')
-tf.flags.DEFINE_integer('image_size', 48, 'image size, default: 256')
+tf.flags.DEFINE_integer('batch_size', 64, 'batch size, default: 1')
+tf.flags.DEFINE_integer('image_size', 128, 'image size, default: 256')
 tf.flags.DEFINE_bool('use_lsgan', True,
                      'use lsgan (mean squared error) or cross entropy loss, default: True')
 tf.flags.DEFINE_string('norm', 'instance',
@@ -30,20 +31,20 @@ tf.flags.DEFINE_integer('lambda1', 10.0,
                         'weight for forward cycle loss (X->Y->X), default: 10.0')
 tf.flags.DEFINE_integer('lambda2', 10.0,
                         'weight for backward cycle loss (Y->X->Y), default: 10.0')
-tf.flags.DEFINE_float('learning_rate', 2e-4,
+tf.flags.DEFINE_float('learning_rate', 1e-4,
                       'initial learning rate for Adam, default: 0.0002')
 tf.flags.DEFINE_float('beta1', 0.5,
                       'momentum term of Adam, default: 0.5')
-tf.flags.DEFINE_float('pool_size', 30,
+tf.flags.DEFINE_float('pool_size', 50,
                       'size of image buffer that stores previously generated images, default: 50')
 tf.flags.DEFINE_integer('ngf', 64,
                         'number of gen filters in first conv layer, default: 64')
 
-tf.flags.DEFINE_string('X', '/Users/zhuxinyue/ML/tfrecords/neutral.tfrecords',
+tf.flags.DEFINE_string('X', '/Users/zhuxinyue/ML/tfrecords/dataX.tfrecords',
                        'X tfrecords file for training, default: data/tfrecords/apple.tfrecords')
-tf.flags.DEFINE_string('Y', '/Users/zhuxinyue/ML/tfrecords/disgust.tfrecords',
+tf.flags.DEFINE_string('Y', '/Users/zhuxinyue/ML/tfrecords/dataY.tfrecords',
                        'Y tfrecords file for training, default: data/tfrecords/orange.tfrecords')
-tf.flags.DEFINE_string('load_model', '20171021-1558',
+tf.flags.DEFINE_string('load_model', '20171110-2239',
                         'folder of saved model that you wish to continue training (e.g. 20170602-1936), default: None')
 
 def train():
@@ -62,7 +63,7 @@ def train():
       cycle_gan = CycleGAN(
           X_train_file=FLAGS.X,
           Y_train_file=FLAGS.Y,
-          dataset_name='face_emotion',
+          dataset_name='test',
           batch_size=FLAGS.batch_size)
 
       G_loss, D_Y_loss, F_loss, D_X_loss, fake_y, fake_x = cycle_gan.model()
@@ -87,8 +88,8 @@ def train():
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
     try:
-      fake_Y_pool = ImagePool(FLAGS.pool_size)
-      fake_X_pool = ImagePool(FLAGS.pool_size)
+      # fake_Y_pool = ImagePool(FLAGS.pool_size)
+      # fake_X_pool = ImagePool(FLAGS.pool_size)
 
       while not coord.should_stop():
         # get previously generated images
@@ -98,8 +99,8 @@ def train():
         _, G_loss_val, D_Y_loss_val, F_loss_val, D_X_loss_val, summary = (
               sess.run(
                   [optimizers, G_loss, D_Y_loss, F_loss, D_X_loss, summary_op],
-                  feed_dict={cycle_gan.fake_y: fake_Y_pool.query(fake_y_val),
-                             cycle_gan.fake_x: fake_X_pool.query(fake_x_val)}
+                  feed_dict={cycle_gan.fake_y: fake_y_val,
+                             cycle_gan.fake_x: fake_x_val}
               )
         )
 

@@ -5,6 +5,10 @@
 # @File     : manifold.py
 # @Software : PyCharm
 
+'''
+Calculating and Generating data manifold in the format of t-SNE embedding
+'''
+
 from time import time
 import sys
 import numpy as np
@@ -21,7 +25,6 @@ gen_path1 = '/Users/zhuxinyue/ML/gen_CG/disgust/'
 gen_path2 = '/Users/zhuxinyue/ML/gen_CG/sad/'
 classes = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
 # classes = ['angry', 'happy', ' fear', 'surprise']
-
 #
 images, labels, _, _, _, _ = read_train_sets(data_path, classes, 0, 6000)
 disgust_img, disgust_label, _ = data.load_gan_image(gen_path1, classes, 'disgust')
@@ -47,8 +50,25 @@ n_neighbors = 30
 # print(y.shape)
 
 print(images[0].shape)
+mark = []
+# replace y label with symbols
+for i in range(n_samples):
+    if y[i] == 0:
+        mark.append('*')
+    if y[i] == 1:
+        mark.append('+')
+    if y[i] == 2:
+        mark.append('△')
+    if y[i] == 3:
+        mark.append('◇')
+    if y[i] == 4:
+        mark.append('□')
+    if y[i] == 5:
+        mark.append('○')
+    if y[i] == 6:
+        mark.append('❉')
 
-
+print(len(mark))
 
 #----------------------------------------------------------------------
 # read the fc2 layer as input map
@@ -81,7 +101,7 @@ def plot_embedding(X, title=None):
     plt.figure()
     # ax = plt.subplot(111)
     for i in range(X.shape[0]):
-        plt.text(X[i, 0], X[i, 1], str(y[i]),
+        plt.text(X[i, 0], X[i, 1], str(mark[i]),
                  color=plt.cm.Set1(y[i]),
                  fontdict={'weight': 'bold', 'size': 9})
 

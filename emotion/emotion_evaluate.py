@@ -17,14 +17,14 @@ import emotion.emotion_model as model
 import os
 import emotion.emotion_data as data
 
-data_path = '/Users/zhuxinyue/ML/face_emotion/'
-logs_train_dir = '../emotion/logs/gan_dands/'
-logs_var_dir = '../emotion/logs/gan_dands/'
+data_path = '/Users/zhuxinyue/ML/SFEW/val2/'
+logs_train_dir = '../emotion/logs2/gan/'
+logs_var_dir = '../emotion/logs2/gan/'
 
 BATCH_SIZE = 1
-N_CLASSES = 7
+N_CLASSES = 6
 image_size = 48
-classes = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
+classes = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise']
 
 def evaluate_one_image(test_image, test_cls, logs_train_dir):
     # display image
@@ -66,7 +66,7 @@ def main(argv=None):  # pylint: disable=unused-argument
     right_pred_cls = np.zeros(shape=[N_CLASSES], dtype=np.int64)
     cls_accuracy = []
 
-    test_images, test_clss = data.read_test_set(data_path, classes, 2000)
+    test_images, test_clss = data.read_test_set(data_path, classes, 1)
     test_num = test_images.shape[0]
     print('Number of test data:', test_num)
 

@@ -5,7 +5,7 @@ import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 class Reader():
-  def __init__(self, tfrecords_file, image_size=48,
+  def __init__(self, tfrecords_file, image_size=None,
     min_queue_examples=1000, batch_size=1, num_threads=8, name=''):
     """
     Args:
@@ -35,21 +35,24 @@ class Reader():
       features = tf.parse_single_example(
           serialized_example,
           features={
-            'img_raw': tf.FixedLenFeature([], tf.string)
+            'data_raw': tf.FixedLenFeature([], tf.string)
           })
 
-      image = tf.decode_raw(features['img_raw'], tf.float32)
-      image = tf.reshape(image, [self.image_size, self.image_size, 1])
-      print(image.shape)
+      # image = tf.decode_raw(features['data_raw'], tf.float32)
+      # image = tf.reshape(image, [self.image_size, self.image_size, 3])
+      # print(image.shape)
+      data = tf.decode_raw(features['data_raw'], tf.float32)
+      data = tf.reshape(data, [3])
+      print(data.shape)
 
-      images = tf.train.shuffle_batch(
-            [image], batch_size=self.batch_size, num_threads=self.num_threads,
+      datas = tf.train.shuffle_batch(
+            [data], batch_size=self.batch_size, num_threads=self.num_threads,
             capacity=self.min_queue_examples + 3*self.batch_size,
             min_after_dequeue=self.min_queue_examples
           )
 
-      tf.summary.image('input', images)
-    return images
+      # tf.summary.image('input', datas)
+    return datas
 
 def test_reader():
   TRAIN_FILE_1 = '/Users/zhuxinyue/ML/tfrecords/emotion.tfrecords'

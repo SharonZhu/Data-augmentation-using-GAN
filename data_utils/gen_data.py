@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# @Time     : 2017/10/19  上午10:31
+# @Time     : 2017/11/11  上午9:13
 # @Author   : Zhuxinyue_Sharon
 # @Email    : zxybuptsee@163.com
-# @File     : gen_image.py
+# @File     : gen_data.py
 # @Software : PyCharm
 
 """Translate an image to another image
@@ -15,21 +15,19 @@ python export_graph.py --model pretrained/face2emotion.pb \
 import sys
 import tensorflow as tf
 import numpy as np
+import xlsxwriter as xw
 import os
 from CycleGAN.model import CycleGAN as CG
-import CycleGAN.utils as utils
-from scipy import misc
-from emotion.emotion_data import read_train_sets
+from CycleGAN.data_tfr import readexcel
 
 FLAGS = tf.flags.FLAGS
 
 # tf.flags.DEFINE_string('model', 'pretrained/face2emotion.pb', 'model path (.pb)')
-tf.flags.DEFINE_string('input', 'image_0001.jpg', 'input image path (.jpg)')
-tf.flags.DEFINE_string('inputdir', '/Users/zhuxinyue/ML/SFEW/train2/', 'input image dir')
+tf.flags.DEFINE_string('inputdir', '/Users/zhuxinyue/ML/tfrecords/data.xlsx', 'input image dir')
 # tf.flags.DEFINE_string('output', 'output_sample.jpg', 'output image path (.jpg)')
 tf.flags.DEFINE_integer('image_size', '128', 'image size, default: 256')
-tf.flags.DEFINE_string('checkpoint_dir', 'checkpoints/SFEW-fear/', 'checkpoints directory path')
-tf.flags.DEFINE_string('result_dir', '/Users/zhuxinyue/ML/SFEW/generate/fear/', 'checkpoints directory path')
+tf.flags.DEFINE_string('checkpoint_dir', 'checkpoints/20171110-2239/', 'checkpoints directory path')
+tf.flags.DEFINE_string('result_dir', '/Users/zhuxinyue/ML/tfrecords/data_gen.xlsx', 'checkpoints directory path')
 tf.flags.DEFINE_integer('ngf', 64,
                         'number of gen filters in first conv layer, default: 64')
 tf.flags.DEFINE_string('norm', 'instance',
@@ -66,10 +64,10 @@ def restore_gen():
             cycle_gan = CG(
               X_train_file='',
               Y_train_file='',
-              dataset_name='sfew',
+              dataset_name='test',
               batch_size=1)
 
-            input_image = tf.placeholder(tf.float32, shape=[1, FLAGS.image_size, FLAGS.image_size, 3], name='input_image')
+            input_data = tf.placeholder(tf.float32, shape=[1, 3], name='input_image')
             cycle_gan.model()
 
             saver = tf.train.Saver()
@@ -83,34 +81,24 @@ def restore_gen():
                 print("no checkpoint file founded")
                 return
 
-            # _, face_images = load_caltech101(FLAGS.inputdir, FLAGS.image_size)
-            classes = ['neutral']
-            face_images, lables, _, _, _, _ = read_train_sets(FLAGS.inputdir, classes, 0, 3)
-            print(face_images.shape)
-            gen_num = face_images.shape[0]
-            print(gen_num)
+            X = readexcel(FLAGS.inputdir, 0)
+            gen_num = X.shape[0]
+
+            wb = xw.Workbook(FLAGS.result_dir)
+            sheet1 = wb.add_worksheet()
 
             for i in range(gen_num):
                 print('Generating...', i)
-                face_image = np.reshape(face_images[i], [1, FLAGS.image_size, FLAGS.image_size, 3])
-                save_path = FLAGS.result_dir + 'genimg_' + str(i) + '.jpg'
+                x = X[i]
+                x = np.reshape(x, [1,3])
+                gen_y = cycle_gan.G.__call__(x)
 
-                gen_image = cycle_gan.G.__call__(input_image)
+                output = sess.run(gen_y, feed_dict={input_data: x})
+                print(output)
+                for j in range(3):
+                    sheet1.write(i, j, str(output[0, j]))
 
-                output = sess.run(gen_image, feed_dict={input_image: face_image})
-                # print(output)
-                output = np.reshape(output, [FLAGS.image_size, FLAGS.image_size, 3])
-                output = output * 255
-                print(output.shape)
-                # display_image(output, gray=True)
-                # plt.show()
-
-                misc.toimage(output).save(save_path)
-
-            # display fake image
-            # display_image(gen_image)
-            # plt.show()
-            # sys.exit()
+            wb.close()
         sess.close()
 
 def main(unused_argv):
